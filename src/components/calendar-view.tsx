@@ -24,7 +24,9 @@ import {
   TYPE_COLORS,
   RECURRING_MEETINGS,
   USERS,
+  BRANCH_LABELS,
 } from "@/lib/constants";
+import { useSearch } from "@/lib/use-search";
 import { AudienceMultiSelect } from "@/components/audience-multi-select";
 import { ArchiveReasonModal } from "@/components/archive-reason-modal";
 
@@ -55,6 +57,12 @@ interface Enablement {
   sourceSlackChannel: string | null;
   sourceSlackLink: string | null;
   sourceSlackAuthor: string | null;
+  branches: string | null;
+  sourceSignal: string | null;
+  learningObjective: string | null;
+  proposedDeliverables: string | null;
+  confidence: string | null;
+  priorityReason: string | null;
 }
 
 // Fields needed to display on calendar — all fields required before scheduling
@@ -100,6 +108,7 @@ export function CalendarView() {
   const [deliverySlots, setDeliverySlots] = useState<Record<string, string>>({});
   const [customTimes, setCustomTimes] = useState<Record<string, { time: string; timezone: string }>>({});
   const [googleConnected, setGoogleConnected] = useState<boolean | null>(null);
+  const { query: searchQuery, setQuery: setSearchQuery, filtered: visibleAccepted } = useSearch(accepted);
   const cardContainerRef = useRef<HTMLDivElement>(null);
   const draggableRef = useRef<Draggable | null>(null);
 
@@ -460,10 +469,21 @@ export function CalendarView() {
 
       {/* Accepted enablements — ready to schedule */}
       <div>
-        <h2 className="text-sm font-bold text-[#1a1a1a] uppercase tracking-wide mb-4">
-          Ready to Schedule
-          <span className="ml-2 text-gladly-green">({accepted.length})</span>
-        </h2>
+        <div className="flex items-center justify-between mb-4">
+          <h2 className="text-sm font-bold text-[#1a1a1a] uppercase tracking-wide">
+            Ready to Schedule
+            <span className="ml-2 text-gladly-green">({accepted.length})</span>
+          </h2>
+          {accepted.length > 0 && (
+            <Input
+              type="search"
+              placeholder="Search cards..."
+              value={searchQuery}
+              onChange={(e) => setSearchQuery(e.target.value)}
+              className="border-[#e5e5e5] bg-white h-8 text-sm w-56"
+            />
+          )}
+        </div>
 
         {accepted.length === 0 ? (
           <div className="rounded-lg bg-white border border-dashed border-[#e5e5e5] p-8 text-center text-[#aaa] text-sm">
@@ -471,7 +491,7 @@ export function CalendarView() {
           </div>
         ) : (
           <div ref={cardContainerRef} className="grid grid-cols-1 gap-3 lg:grid-cols-2 xl:grid-cols-3">
-            {accepted.map((item) => {
+            {visibleAccepted.map((item) => {
               const complete = isComplete(item);
               const missing = getMissingFields(item);
               const isExpanded = expandedCardId === item.id;
@@ -1169,6 +1189,48 @@ export function CalendarView() {
                 <div>
                   <span className="text-xs font-semibold text-[#aaa] uppercase tracking-wide">Submitter</span>
                   <p className="mt-0.5 text-sm text-[#1a1a1a]">{viewingEvent.submitter}</p>
+                </div>
+              )}
+              {viewingEvent.branches && (() => {
+                try {
+                  const parsed = JSON.parse(viewingEvent.branches) as string[];
+                  if (parsed.length === 0) return null;
+                  return (
+                    <div className="flex flex-wrap gap-1.5">
+                      {parsed.map((b) => {
+                        const info = BRANCH_LABELS[b];
+                        return info ? (
+                          <Badge key={b} variant="secondary" className={`border-0 text-xs font-medium ${info.color}`}>
+                            {info.label}
+                          </Badge>
+                        ) : null;
+                      })}
+                    </div>
+                  );
+                } catch { return null; }
+              })()}
+              {viewingEvent.sourceSignal && (
+                <div className="rounded bg-[#f5f5f5] px-3 py-2 border-l-2 border-[#ccc]">
+                  <span className="text-[10px] font-semibold text-[#aaa] uppercase tracking-wide">Source signal</span>
+                  <p className="text-xs text-[#555] italic mt-0.5">&ldquo;{viewingEvent.sourceSignal}&rdquo;</p>
+                </div>
+              )}
+              {viewingEvent.learningObjective && (
+                <div>
+                  <span className="text-xs font-semibold text-[#aaa] uppercase tracking-wide">Learning Objective</span>
+                  <p className="mt-0.5 text-sm text-[#1a1a1a]">{viewingEvent.learningObjective}</p>
+                </div>
+              )}
+              {viewingEvent.confidence && (
+                <div>
+                  <span className="text-xs font-semibold text-[#aaa] uppercase tracking-wide">Confidence</span>
+                  <span className={`ml-2 text-[10px] font-medium uppercase tracking-wide px-1.5 py-0.5 rounded ${
+                    viewingEvent.confidence === "high"
+                      ? "bg-green-100 text-green-700"
+                      : "bg-yellow-100 text-yellow-700"
+                  }`}>
+                    {viewingEvent.confidence}
+                  </span>
                 </div>
               )}
             </div>

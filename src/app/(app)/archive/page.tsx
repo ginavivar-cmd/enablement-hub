@@ -3,6 +3,8 @@
 import { useState, useEffect, useMemo } from "react";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import { useSearch } from "@/lib/use-search";
 
 // ── Quarter helpers (same as dashboard) ─────────────────────────────
 const QUARTER_LABELS = ["Q1 (Feb - Apr)", "Q2 (May - Jul)", "Q3 (Aug - Oct)", "Q4 (Nov - Jan)"];
@@ -40,6 +42,12 @@ interface ArchivedEnablement {
   archivedBy: string | null;
   scheduledDate: string | null;
   updatedAt: string;
+  branches: string | null;
+  sourceSignal: string | null;
+  learningObjective: string | null;
+  proposedDeliverables: string | null;
+  confidence: string | null;
+  priorityReason: string | null;
 }
 
 export default function ArchivePage() {
@@ -78,6 +86,13 @@ export default function ArchivePage() {
       return d >= quarterRange.start && d <= quarterRange.end;
     });
   }, [items, quarterRange]);
+
+  const { query, setQuery, filtered: searchedItems } = useSearch(filteredItems);
+
+  // Reset search when quarter changes
+  useEffect(() => {
+    setQuery("");
+  }, [selectedYear, selectedQuarter, setQuery]);
 
   function prevQuarter() {
     if (selectedQuarter === 1) {
@@ -137,17 +152,24 @@ export default function ArchivePage() {
             {completedCount} completed, {archivedCount} archived
           </span>
         )}
+        <Input
+          type="search"
+          placeholder="Search archive..."
+          value={query}
+          onChange={(e) => setQuery(e.target.value)}
+          className="ml-auto border-[#e5e5e5] bg-white h-8 text-sm w-56"
+        />
       </div>
 
       {loading ? (
         <div className="mt-8 text-center text-[#aaa] text-sm">Loading...</div>
-      ) : filteredItems.length === 0 ? (
+      ) : searchedItems.length === 0 ? (
         <div className="mt-6 rounded-lg bg-white border border-dashed border-[#e5e5e5] p-12 text-center text-[#aaa] text-sm">
           No archived enablements for this quarter.
         </div>
       ) : (
         <div className="mt-6 space-y-3">
-          {filteredItems.map((item) => (
+          {searchedItems.map((item) => (
             <div
               key={item.id}
               className={`rounded-lg bg-white border border-[#e5e5e5] shadow-sm border-l-4 ${
@@ -191,6 +213,15 @@ export default function ArchivePage() {
                         {aud}
                       </Badge>
                     ))}
+                    {item.confidence && (
+                      <span className={`text-[10px] font-medium uppercase tracking-wide px-1.5 py-0.5 rounded ${
+                        item.confidence === "high"
+                          ? "bg-green-100 text-green-700"
+                          : "bg-yellow-100 text-yellow-700"
+                      }`}>
+                        {item.confidence}
+                      </span>
+                    )}
                   </div>
                 </div>
                 <div className="shrink-0 flex items-center gap-2">
@@ -216,6 +247,11 @@ export default function ArchivePage() {
 
               {item.details && (
                 <p className="mt-3 text-sm text-[#737373] line-clamp-2">{item.details}</p>
+              )}
+              {item.learningObjective && (
+                <p className="mt-2 text-xs text-[#888]">
+                  <span className="font-semibold text-[#aaa]">Learning objective:</span> {item.learningObjective}
+                </p>
               )}
 
               {(item.archivedReason || item.archivedBy || item.owner) && (

@@ -1,5 +1,8 @@
 "use client";
 
+import { Input } from "@/components/ui/input";
+import { useSearch } from "@/lib/use-search";
+
 const TYPE_DOT_COLORS: Record<string, string> = {
   Async: "#3B82F6",
   Live: "#10B981",
@@ -12,6 +15,8 @@ interface Enablement {
   type: string | null;
   owner: string | null;
   status: string;
+  details?: string | null;
+  audience?: string | null;
 }
 
 interface SwimLanesProps {
@@ -68,10 +73,25 @@ function LaneItem({ item }: { item: Enablement }) {
 }
 
 export function SwimLanes({ enablements }: SwimLanesProps) {
+  const { query, setQuery, filtered } = useSearch(enablements);
+
   return (
+    <div className="space-y-4">
+      <div className="flex items-center justify-between">
+        <h3 className="text-sm font-bold text-[#1a1a1a] uppercase tracking-wide">
+          Enablement Lanes
+        </h3>
+        <Input
+          type="search"
+          placeholder="Search enablements..."
+          value={query}
+          onChange={(e) => setQuery(e.target.value)}
+          className="border-[#e5e5e5] bg-white h-8 text-sm w-56"
+        />
+      </div>
     <div className="grid grid-cols-1 gap-4 md:grid-cols-3">
       {LANES.map((lane) => {
-        const items = enablements.filter(lane.filter);
+        const items = filtered.filter(lane.filter);
         return (
           <div
             key={lane.title}
@@ -98,6 +118,7 @@ export function SwimLanes({ enablements }: SwimLanesProps) {
           </div>
         );
       })}
+    </div>
     </div>
   );
 }

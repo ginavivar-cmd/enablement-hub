@@ -2,6 +2,8 @@
 
 import { useState, useEffect, useCallback } from "react";
 import { EnablementTile } from "@/components/enablement-tile";
+import { Input } from "@/components/ui/input";
+import { useSearch } from "@/lib/use-search";
 
 interface Enablement {
   id: string;
@@ -17,6 +19,12 @@ interface Enablement {
   priority: string | null;
   improvementArea: string | null;
   status: string;
+  branches: string | null;
+  sourceSignal: string | null;
+  learningObjective: string | null;
+  proposedDeliverables: string | null;
+  confidence: string | null;
+  priorityReason: string | null;
 }
 
 interface WeeklySummary {
@@ -28,6 +36,7 @@ export default function HearingPage() {
   const [items, setItems] = useState<Enablement[]>([]);
   const [summary, setSummary] = useState<WeeklySummary | null>(null);
   const [loading, setLoading] = useState(true);
+  const { query, setQuery, filtered } = useSearch(items);
 
   const load = useCallback(() => {
     setLoading(true);
@@ -47,8 +56,8 @@ export default function HearingPage() {
     load();
   }, [load]);
 
-  const activeItems = items.filter((i) => i.status !== "hold");
-  const holdItems = items.filter((i) => i.status === "hold");
+  const activeItems = filtered.filter((i) => i.status !== "hold");
+  const holdItems = filtered.filter((i) => i.status === "hold");
 
   return (
     <div className="space-y-8">
@@ -61,6 +70,15 @@ export default function HearingPage() {
           Enablement needs and gaps from intake submissions and Slack signals
         </p>
       </div>
+
+      {/* Search */}
+      <Input
+        type="search"
+        placeholder="Search signals by title, details, owner, or audience..."
+        value={query}
+        onChange={(e) => setQuery(e.target.value)}
+        className="border-[#e5e5e5] bg-white h-9 text-sm max-w-md"
+      />
 
       {/* Executive Summary — white card with green left border */}
       <div className="rounded-lg bg-white border border-[#e5e5e5] shadow-sm border-l-4 border-l-gladly-green p-6">

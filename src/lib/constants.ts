@@ -74,6 +74,12 @@ export const RECURRING_MEETINGS = [
   },
 ];
 
+export const BRANCH_LABELS: Record<string, { label: string; color: string }> = {
+  internal_enablement: { label: "Internal", color: "bg-blue-50 text-blue-700" },
+  customer_education: { label: "Customer Ed", color: "bg-teal-50 text-teal-700" },
+  marketing_pmm: { label: "Marketing/PMM", color: "bg-pink-50 text-pink-700" },
+};
+
 export const USERS = [
   { name: "Gina Vivar", displayName: "Gina" },
   { name: "Christian Shockley", displayName: "Christian" },

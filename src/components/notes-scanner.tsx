@@ -4,6 +4,7 @@ import { useState } from "react";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
+import { BRANCH_LABELS } from "@/lib/constants";
 
 interface Opportunity {
   title: string;
@@ -20,12 +21,6 @@ interface Opportunity {
   confidence?: "high" | "low";
   priority_reason?: string;
 }
-
-const BRANCH_LABELS: Record<string, { label: string; color: string }> = {
-  internal_enablement: { label: "Internal", color: "bg-blue-50 text-blue-700" },
-  customer_education: { label: "Customer Ed", color: "bg-teal-50 text-teal-700" },
-  marketing_pmm: { label: "Marketing/PMM", color: "bg-pink-50 text-pink-700" },
-};
 
 interface NotesScannerProps {
   onSuccess?: () => void;
@@ -74,42 +69,22 @@ export function NotesScanner({ onSuccess }: NotesScannerProps) {
 
   async function handleSubmit(opp: Opportunity, index: number) {
     try {
-      const detailParts: string[] = [];
-      if (opp.level) detailParts.push(`**Level:** ${opp.level}`);
-      if (opp.confidence) detailParts.push(`**Confidence:** ${opp.confidence}`);
-      if (opp.branches?.length) {
-        detailParts.push(`**Branches:** ${opp.branches.map((b) => BRANCH_LABELS[b]?.label || b).join(", ")}`);
-      }
-      detailParts.push("");
-      detailParts.push(opp.details);
-      if (opp.source_signal) {
-        detailParts.push("");
-        detailParts.push(`**Source signal:** "${opp.source_signal}"`);
-      }
-      if (opp.learning_objective) {
-        detailParts.push("");
-        detailParts.push(`**Learning objective:** ${opp.learning_objective}`);
-      }
-      if (opp.proposed_deliverables?.length) {
-        detailParts.push("");
-        detailParts.push(`**Proposed deliverables:**`);
-        opp.proposed_deliverables.forEach((d) => detailParts.push(`- ${d}`));
-      }
-      if (opp.priority_reason) {
-        detailParts.push("");
-        detailParts.push(`**Priority rationale:** ${opp.priority_reason}`);
-      }
-      const details = detailParts.join("\n");
       const res = await fetch("/api/enablements", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
           title: opp.title,
-          details,
+          details: opp.details,
           type: opp.type,
           audience: opp.audience,
           priority: opp.priority,
           improvementArea: opp.improvementArea || null,
+          branches: opp.branches || null,
+          sourceSignal: opp.source_signal || null,
+          learningObjective: opp.learning_objective || null,
+          proposedDeliverables: opp.proposed_deliverables || null,
+          confidence: opp.confidence || null,
+          priorityReason: opp.priority_reason || null,
         }),
       });
       if (!res.ok) throw new Error("Failed to submit");

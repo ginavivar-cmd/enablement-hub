@@ -10,7 +10,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
-import { USERS } from "@/lib/constants";
+import { USERS, BRANCH_LABELS } from "@/lib/constants";
 import { ArchiveReasonModal } from "@/components/archive-reason-modal";
 
 interface EnablementTileProps {
@@ -27,6 +27,12 @@ interface EnablementTileProps {
   priority: string | null;
   improvementArea: string | null;
   status: string;
+  branches: string | null;
+  sourceSignal: string | null;
+  learningObjective: string | null;
+  proposedDeliverables: string | null;
+  confidence: string | null;
+  priorityReason: string | null;
   onAction: () => void;
 }
 
@@ -44,6 +50,12 @@ export function EnablementTile({
   priority,
   improvementArea,
   status,
+  branches,
+  sourceSignal,
+  learningObjective,
+  proposedDeliverables,
+  confidence,
+  priorityReason,
   onAction,
 }: EnablementTileProps) {
   const [expanded, setExpanded] = useState(false);
@@ -112,6 +124,19 @@ export function EnablementTile({
               {title || "Untitled request"}
             </h3>
             <div className="mt-2 flex flex-wrap items-center gap-2">
+              {(() => {
+                try {
+                  const parsed = branches ? JSON.parse(branches) as string[] : [];
+                  return parsed.map((b) => {
+                    const info = BRANCH_LABELS[b];
+                    return info ? (
+                      <Badge key={b} variant="secondary" className={`border-0 text-xs font-medium ${info.color}`}>
+                        {info.label}
+                      </Badge>
+                    ) : null;
+                  });
+                } catch { return null; }
+              })()}
               {type && (
                 <Badge
                   variant="secondary"
@@ -144,6 +169,15 @@ export function EnablementTile({
                 >
                   {priority}
                 </Badge>
+              )}
+              {confidence && (
+                <span className={`text-[10px] font-medium uppercase tracking-wide px-1.5 py-0.5 rounded ${
+                  confidence === "high"
+                    ? "bg-green-100 text-green-700"
+                    : "bg-yellow-100 text-yellow-700"
+                }`}>
+                  {confidence}
+                </span>
               )}
               {source === "slack" && (
                 <Badge variant="secondary" className="bg-purple-50 text-purple-700 border-0 text-xs">
@@ -186,6 +220,43 @@ export function EnablementTile({
             <div>
               <span className="text-xs font-semibold text-[#aaa] uppercase tracking-wide">Improvement Area</span>
               <p className="mt-1 text-sm text-[#1a1a1a]">{improvementArea}</p>
+            </div>
+          )}
+          {sourceSignal && (
+            <div className="rounded bg-[#f5f5f5] px-3 py-2 border-l-2 border-[#ccc]">
+              <span className="text-[10px] font-semibold text-[#aaa] uppercase tracking-wide">Source signal</span>
+              <p className="text-xs text-[#555] italic mt-0.5">&ldquo;{sourceSignal}&rdquo;</p>
+            </div>
+          )}
+          {learningObjective && (
+            <div>
+              <span className="text-xs font-semibold text-[#aaa] uppercase tracking-wide">Learning Objective</span>
+              <p className="mt-1 text-sm text-[#1a1a1a]">{learningObjective}</p>
+            </div>
+          )}
+          {(() => {
+            try {
+              const items = proposedDeliverables ? JSON.parse(proposedDeliverables) as string[] : [];
+              if (items.length === 0) return null;
+              return (
+                <div>
+                  <span className="text-xs font-semibold text-[#aaa] uppercase tracking-wide">Proposed Deliverables</span>
+                  <ul className="mt-1 space-y-0.5">
+                    {items.map((d, i) => (
+                      <li key={i} className="text-sm text-[#1a1a1a] flex items-start gap-1.5">
+                        <span className="text-[#ccc] mt-px">&#8226;</span>
+                        {d}
+                      </li>
+                    ))}
+                  </ul>
+                </div>
+              );
+            } catch { return null; }
+          })()}
+          {priorityReason && (
+            <div>
+              <span className="text-xs font-semibold text-[#aaa] uppercase tracking-wide">Priority Rationale</span>
+              <p className="mt-1 text-sm text-[#1a1a1a]">{priorityReason}</p>
             </div>
           )}
           <div>

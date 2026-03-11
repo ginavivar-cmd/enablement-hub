@@ -39,6 +39,12 @@ export async function PATCH(
     "status",
     "archivedReason",
     "archivedBy",
+    "branches",
+    "sourceSignal",
+    "learningObjective",
+    "proposedDeliverables",
+    "confidence",
+    "priorityReason",
   ];
 
   for (const field of allowedFields) {
