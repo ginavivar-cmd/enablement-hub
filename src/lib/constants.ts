@@ -1,4 +1,14 @@
-export const AUDIENCES = ["BDR", "SAM", "SE", "All", "Other"] as const;
+export const AUDIENCES = [
+  "BDRs",
+  "Growth AEs",
+  "Enterprise AEs",
+  "All AEs",
+  "SAMs",
+  "SEs",
+  "Customer Success/Support",
+  "Marketing",
+  "All of the above",
+] as const;
 export type Audience = (typeof AUDIENCES)[number];
 
 export const PRIORITIES = ["High", "Medium", "Low"] as const;
@@ -39,24 +49,28 @@ export const TYPE_COLORS: Record<string, string> = {
 
 export const RECURRING_MEETINGS = [
   {
-    name: "Enablement Hour",
-    schedule: "Thursdays, 12pm PST / 3pm EST",
-  },
-  {
-    name: "Refuse to Compromise Series",
-    schedule: "Recurring",
+    name: "AE Team Meeting (Refuse to Compromise)",
+    schedule: "Fridays, 9–10am PST / 12–1pm EST",
   },
   {
     name: "Team Meeting: BDR",
-    schedule: "Recurring",
+    schedule: "Wednesdays, 8–9am PST / 11am–12pm EST",
   },
   {
     name: "Team Meeting: SAM",
-    schedule: "Recurring",
+    schedule: "Thursdays, 1–2pm PST / 4–5pm EST",
   },
   {
     name: "Team Meeting: SE",
-    schedule: "Recurring",
+    schedule: "Mondays, 12–12:30pm PST / 3–3:30pm EST",
+  },
+  {
+    name: "Enablement Hour",
+    schedule: "Thursdays, 12–1pm PST / 3–4pm EST",
+  },
+  {
+    name: "Technical Enablement",
+    schedule: "Fridays, 10:15–11am PST / 1:15–2pm EST",
   },
 ];
 
