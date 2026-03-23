@@ -70,7 +70,10 @@ export async function POST(req: NextRequest) {
       confidence: body.confidence || null,
       priorityReason: body.priorityReason || null,
       status: "submitted",
-      source: "intake",
+      source: body.source || "intake",
+      sourceSlackChannel: body.sourceSlackChannel || null,
+      sourceSlackLink: body.sourceSlackLink || null,
+      sourceSlackAuthor: body.sourceSlackAuthor || null,
       createdByUserId: userId,
     })
     .returning();

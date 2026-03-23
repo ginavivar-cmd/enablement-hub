@@ -80,6 +80,12 @@ export const BRANCH_LABELS: Record<string, { label: string; color: string }> = {
   marketing_pmm: { label: "Marketing/PMM", color: "bg-pink-50 text-pink-700" },
 };
 
+export const SLACK_CHANNELS = [
+  // Curated high-signal channels for enablement scanning.
+  // Referenced by Claude Code when running "scan Slack channels".
+  "what-we-are-shipping",
+] as const;
+
 export const USERS = [
   { name: "Gina Vivar", displayName: "Gina" },
   { name: "Christian Shockley", displayName: "Christian" },

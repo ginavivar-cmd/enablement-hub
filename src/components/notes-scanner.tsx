@@ -1,10 +1,18 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useRef, useCallback } from "react";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
 import { BRANCH_LABELS } from "@/lib/constants";
+
+const ACCEPTED_TYPES = [
+  "application/pdf",
+  "application/vnd.openxmlformats-officedocument.wordprocessingml.document",
+  "text/plain",
+  "text/markdown",
+];
+const ACCEPTED_EXTENSIONS = [".pdf", ".docx", ".txt", ".md"];
 
 interface Opportunity {
   title: string;
@@ -33,6 +41,74 @@ export function NotesScanner({ onSuccess }: NotesScannerProps) {
   const [submittedIds, setSubmittedIds] = useState<Set<number>>(new Set());
   const [dismissedIds, setDismissedIds] = useState<Set<number>>(new Set());
   const [error, setError] = useState<string | null>(null);
+  const [parsing, setParsing] = useState(false);
+  const [dragOver, setDragOver] = useState(false);
+  const [parsedFiles, setParsedFiles] = useState<string[]>([]);
+  const fileInputRef = useRef<HTMLInputElement>(null);
+
+  const parseFile = useCallback(async (file: File) => {
+    const formData = new FormData();
+    formData.append("file", file);
+
+    const res = await fetch("/api/upload/parse", {
+      method: "POST",
+      body: formData,
+    });
+
+    if (!res.ok) {
+      const data = await res.json().catch(() => ({}));
+      throw new Error(data.error || `Failed to parse ${file.name}`);
+    }
+
+    const data = await res.json();
+    return { text: data.text as string, fileName: data.fileName as string };
+  }, []);
+
+  const handleFiles = useCallback(async (files: FileList | File[]) => {
+    const fileArray = Array.from(files).filter((f) =>
+      ACCEPTED_EXTENSIONS.some((ext) => f.name.toLowerCase().endsWith(ext))
+    );
+
+    if (fileArray.length === 0) {
+      setError("No supported files. Use PDF, DOCX, TXT, or MD.");
+      return;
+    }
+
+    setParsing(true);
+    setError(null);
+
+    try {
+      const results = await Promise.all(fileArray.map(parseFile));
+      const newText = results
+        .map((r) => `--- ${r.fileName} ---\n${r.text}`)
+        .join("\n\n");
+
+      setNotes((prev) => (prev.trim() ? `${prev}\n\n${newText}` : newText));
+      setParsedFiles((prev) => [...prev, ...results.map((r) => r.fileName)]);
+    } catch (err) {
+      setError(err instanceof Error ? err.message : "Failed to parse file(s)");
+    } finally {
+      setParsing(false);
+    }
+  }, [parseFile]);
+
+  const handleDrop = useCallback((e: React.DragEvent) => {
+    e.preventDefault();
+    setDragOver(false);
+    if (e.dataTransfer.files.length > 0) {
+      handleFiles(e.dataTransfer.files);
+    }
+  }, [handleFiles]);
+
+  const handleDragOver = useCallback((e: React.DragEvent) => {
+    e.preventDefault();
+    setDragOver(true);
+  }, []);
+
+  const handleDragLeave = useCallback((e: React.DragEvent) => {
+    e.preventDefault();
+    setDragOver(false);
+  }, []);
 
   async function handleScan() {
     if (!notes.trim()) return;
@@ -112,28 +188,82 @@ export function NotesScanner({ onSuccess }: NotesScannerProps) {
         Paste meeting notes, Slack threads, call summaries, deal reviews, or support tickets to automatically identify enablement opportunities.
       </p>
 
-      <Textarea
-        value={notes}
-        onChange={(e) => setNotes(e.target.value)}
-        placeholder="Paste content here — meeting notes, Slack threads, call recordings, deal reviews, support tickets..."
-        className="border-[#e5e5e5] resize-none min-h-[120px]"
-        rows={5}
-      />
+      <div
+        onDrop={handleDrop}
+        onDragOver={handleDragOver}
+        onDragLeave={handleDragLeave}
+        className={`relative rounded-lg border-2 border-dashed transition-colors ${
+          dragOver
+            ? "border-blue-400 bg-blue-50/50"
+            : "border-[#e5e5e5] bg-white"
+        }`}
+      >
+        <Textarea
+          value={notes}
+          onChange={(e) => setNotes(e.target.value)}
+          placeholder="Paste content here or drop files (PDF, DOCX, TXT)..."
+          className="border-0 resize-none min-h-[120px] focus-visible:ring-0"
+          rows={5}
+        />
+        {dragOver && (
+          <div className="absolute inset-0 flex items-center justify-center rounded-lg bg-blue-50/80 pointer-events-none">
+            <p className="text-sm font-medium text-blue-600">Drop files here</p>
+          </div>
+        )}
+      </div>
 
       <div className="mt-3 flex items-center gap-3">
         <Button
           onClick={handleScan}
-          disabled={scanning || !notes.trim()}
+          disabled={scanning || parsing || !notes.trim()}
           className="bg-blue-600 text-white hover:bg-blue-700"
         >
           {scanning ? "Scanning..." : "Scan for Opportunities"}
         </Button>
+        <Button
+          type="button"
+          variant="outline"
+          disabled={parsing}
+          onClick={() => fileInputRef.current?.click()}
+          className="text-sm"
+        >
+          {parsing ? "Parsing..." : "Upload File"}
+        </Button>
+        <input
+          ref={fileInputRef}
+          type="file"
+          accept={ACCEPTED_TYPES.join(",")}
+          multiple
+          className="hidden"
+          onChange={(e) => {
+            if (e.target.files && e.target.files.length > 0) {
+              handleFiles(e.target.files);
+              e.target.value = "";
+            }
+          }}
+        />
         {scanning && (
           <span className="text-sm text-[#737373] animate-pulse">
             AI is analyzing your notes...
           </span>
         )}
+        {parsing && (
+          <span className="text-sm text-[#737373] animate-pulse">
+            Extracting text from file...
+          </span>
+        )}
       </div>
+
+      {parsedFiles.length > 0 && (
+        <div className="mt-2 flex flex-wrap gap-1.5">
+          {parsedFiles.map((name, i) => (
+            <span key={i} className="inline-flex items-center gap-1 rounded bg-blue-50 px-2 py-0.5 text-xs text-blue-700">
+              <svg className="h-3 w-3" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" /></svg>
+              {name}
+            </span>
+          ))}
+        </div>
+      )}
 
       {error && (
         <p className="mt-3 text-sm text-red-600">{error}</p>
