@@ -23,9 +23,10 @@ export async function POST(req: NextRequest) {
     if (name.endsWith(".txt") || name.endsWith(".md")) {
       text = buffer.toString("utf-8");
     } else if (name.endsWith(".pdf")) {
-      const { PDFParse } = await import("pdf-parse");
-      const pdf = new PDFParse({ data: new Uint8Array(buffer) });
-      const result = await pdf.getText();
+      // Import pdf-parse/lib/pdf-parse directly to avoid test file issue
+      // eslint-disable-next-line @typescript-eslint/no-require-imports
+      const pdfParse = require("pdf-parse/lib/pdf-parse");
+      const result = await pdfParse(buffer);
       text = result.text;
     } else if (name.endsWith(".docx")) {
       const mammoth = await import("mammoth");
