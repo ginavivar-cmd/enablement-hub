@@ -34,6 +34,8 @@ export async function PATCH(
     "improvementArea",
     "owner",
     "planningDocLink",
+    "educationPlanningLink",
+    "slackLink",
     "scheduledDate",
     "scheduledEndDate",
     "status",

@@ -16,17 +16,8 @@ interface Enablement {
   createdAt: string;
 }
 
-interface SlackScanEntry {
-  id: number;
-  scannedAt: string;
-  channelsScanned: number;
-  messagesFound: number;
-  signalsGenerated: number;
-}
-
 export default function IntakePage() {
   const [recent, setRecent] = useState<Enablement[]>([]);
-  const [lastScan, setLastScan] = useState<SlackScanEntry | null>(null);
 
   const loadRecent = useCallback(() => {
     fetch("/api/enablements?status=submitted")
@@ -35,17 +26,9 @@ export default function IntakePage() {
       .catch(() => {});
   }, []);
 
-  const loadLastScan = useCallback(() => {
-    fetch("/api/slack/scan-log")
-      .then((res) => res.json())
-      .then((data) => setLastScan(data.lastScan || null))
-      .catch(() => {});
-  }, []);
-
   useEffect(() => {
     loadRecent();
-    loadLastScan();
-  }, [loadRecent, loadLastScan]);
+  }, [loadRecent]);
 
   return (
     <div className="space-y-10">
@@ -56,22 +39,6 @@ export default function IntakePage() {
           Submit enablement requests from meeting notes, ad hoc requests, Slack messages, and field feedback.
         </p>
       </div>
-
-      {/* Recent Slack Scans */}
-      {lastScan && (
-        <div className="rounded-lg bg-white shadow-sm border border-[#e5e5e5] p-4 flex items-center gap-4">
-          <div className="flex h-8 w-8 items-center justify-center rounded-md bg-purple-50 text-purple-600 text-sm font-bold">S</div>
-          <div className="flex-1">
-            <p className="text-sm font-medium text-[#1a1a1a]">Last Slack Scan</p>
-            <p className="text-xs text-[#737373]">
-              {new Date(lastScan.scannedAt).toLocaleDateString()} &middot;{" "}
-              {lastScan.channelsScanned} channel{lastScan.channelsScanned !== 1 ? "s" : ""} &middot;{" "}
-              {lastScan.messagesFound} messages &middot;{" "}
-              {lastScan.signalsGenerated} signal{lastScan.signalsGenerated !== 1 ? "s" : ""} found
-            </p>
-          </div>
-        </div>
-      )}
 
       {/* AI Notes Scanner */}
       <NotesScanner onSuccess={loadRecent} />

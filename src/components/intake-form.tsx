@@ -27,6 +27,9 @@ export function IntakeForm({ onSuccess }: { onSuccess?: () => void }) {
   const [idealDate, setIdealDate] = useState("");
   const [type, setType] = useState("");
   const [improvementArea, setImprovementArea] = useState("");
+  const [educationPlanningLink, setEducationPlanningLink] = useState("");
+  const [planningDocLink, setPlanningDocLink] = useState("");
+  const [slackLink, setSlackLink] = useState("");
 
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
@@ -45,6 +48,9 @@ export function IntakeForm({ onSuccess }: { onSuccess?: () => void }) {
           idealDate: idealDate || null,
           type: type || null,
           improvementArea: improvementArea || null,
+          educationPlanningLink: educationPlanningLink || null,
+          planningDocLink: planningDocLink || null,
+          slackLink: slackLink || null,
         }),
       });
 
@@ -58,6 +64,9 @@ export function IntakeForm({ onSuccess }: { onSuccess?: () => void }) {
         setIdealDate("");
         setType("");
         setImprovementArea("");
+        setEducationPlanningLink("");
+        setPlanningDocLink("");
+        setSlackLink("");
         onSuccess?.();
         setTimeout(() => setSubmitted(false), 4000);
       }
@@ -171,6 +180,37 @@ export function IntakeForm({ onSuccess }: { onSuccess?: () => void }) {
               ))}
             </SelectContent>
           </Select>
+        </div>
+      </div>
+
+      {/* Row 4: Links */}
+      <div className="grid grid-cols-1 gap-4 sm:grid-cols-3">
+        <div className="space-y-2">
+          <Label className="text-[#1a1a1a] font-medium text-sm">Education Planning Link</Label>
+          <Input
+            value={educationPlanningLink}
+            onChange={(e) => setEducationPlanningLink(e.target.value)}
+            placeholder="https://..."
+            className={inputClass}
+          />
+        </div>
+        <div className="space-y-2">
+          <Label className="text-[#1a1a1a] font-medium text-sm">Enablement Planning Doc Link</Label>
+          <Input
+            value={planningDocLink}
+            onChange={(e) => setPlanningDocLink(e.target.value)}
+            placeholder="https://..."
+            className={inputClass}
+          />
+        </div>
+        <div className="space-y-2">
+          <Label className="text-[#1a1a1a] font-medium text-sm">Slack Link</Label>
+          <Input
+            value={slackLink}
+            onChange={(e) => setSlackLink(e.target.value)}
+            placeholder="https://..."
+            className={inputClass}
+          />
         </div>
       </div>
 

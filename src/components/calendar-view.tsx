@@ -48,6 +48,8 @@ interface Enablement {
   type: string | null;
   improvementArea: string | null;
   planningDocLink: string | null;
+  educationPlanningLink: string | null;
+  slackLink: string | null;
   scheduledDate: string | null;
   scheduledEndDate: string | null;
   status: string;
@@ -74,15 +76,20 @@ const SCHEDULE_REQUIRED: { key: keyof Enablement; label: string }[] = [
   { key: "priority", label: "Priority" },
   { key: "type", label: "Type" },
   { key: "improvementArea", label: "Improvement Area" },
-  { key: "planningDocLink", label: "Planning Doc" },
 ];
 
+function hasDocLink(e: Enablement | Record<string, string>): boolean {
+  return !!(e.planningDocLink || e.educationPlanningLink);
+}
+
 function isComplete(e: Enablement): boolean {
-  return SCHEDULE_REQUIRED.every((f) => e[f.key]);
+  return SCHEDULE_REQUIRED.every((f) => e[f.key]) && hasDocLink(e);
 }
 
 function getMissingFields(e: Enablement): string[] {
-  return SCHEDULE_REQUIRED.filter((f) => !e[f.key]).map((f) => f.label);
+  const missing = SCHEDULE_REQUIRED.filter((f) => !e[f.key]).map((f) => f.label);
+  if (!hasDocLink(e)) missing.push("Education Planning Link or Enablement Planning Doc Link");
+  return missing;
 }
 
 function toDateInputValue(dateStr: string | null): string {
@@ -268,6 +275,8 @@ export function CalendarView() {
       type: item.type || "",
       improvementArea: item.improvementArea || "",
       planningDocLink: item.planningDocLink || "",
+      educationPlanningLink: item.educationPlanningLink || "",
+      slackLink: item.slackLink || "",
     });
   }
 
@@ -288,6 +297,8 @@ export function CalendarView() {
       type: item.type || "",
       improvementArea: item.improvementArea || "",
       planningDocLink: item.planningDocLink || "",
+      educationPlanningLink: item.educationPlanningLink || "",
+      slackLink: item.slackLink || "",
     });
   }
 
@@ -358,6 +369,8 @@ export function CalendarView() {
       type: item.type || "",
       improvementArea: item.improvementArea || "",
       planningDocLink: item.planningDocLink || "",
+      educationPlanningLink: item.educationPlanningLink || "",
+      slackLink: item.slackLink || "",
     });
   }
 
@@ -374,7 +387,7 @@ export function CalendarView() {
 
   const allEditFieldsFilled = SCHEDULE_REQUIRED.every(
     (f) => editForm[f.key]?.trim()
-  );
+  ) && hasDocLink(editForm);
 
   const isCertType = (type: string | null) => type === "Certification";
 
@@ -640,10 +653,30 @@ export function CalendarView() {
                           </Select>
                         </div>
                         <div className="space-y-1.5">
-                          <Label className="text-xs font-medium text-[#1a1a1a]">Planning Doc</Label>
+                          <Label className="text-xs font-medium text-[#1a1a1a]">Enablement Planning Doc</Label>
                           <Input
                             value={expandedForm.planningDocLink || ""}
                             onChange={(e) => setExpandedForm({ ...expandedForm, planningDocLink: e.target.value })}
+                            placeholder="https://..."
+                            className="h-8 border-[#e5e5e5] text-sm"
+                          />
+                        </div>
+                      </div>
+                      <div className="grid grid-cols-2 gap-2">
+                        <div className="space-y-1.5">
+                          <Label className="text-xs font-medium text-[#1a1a1a]">Education Planning Link</Label>
+                          <Input
+                            value={expandedForm.educationPlanningLink || ""}
+                            onChange={(e) => setExpandedForm({ ...expandedForm, educationPlanningLink: e.target.value })}
+                            placeholder="https://..."
+                            className="h-8 border-[#e5e5e5] text-sm"
+                          />
+                        </div>
+                        <div className="space-y-1.5">
+                          <Label className="text-xs font-medium text-[#1a1a1a]">Slack Link</Label>
+                          <Input
+                            value={expandedForm.slackLink || ""}
+                            onChange={(e) => setExpandedForm({ ...expandedForm, slackLink: e.target.value })}
                             placeholder="https://..."
                             className="h-8 border-[#e5e5e5] text-sm"
                           />
@@ -918,10 +951,31 @@ export function CalendarView() {
                 </div>
 
                 <div className="space-y-2">
-                  <Label className="text-sm font-medium text-[#1a1a1a]">Planning Doc Link</Label>
+                  <Label className="text-sm font-medium text-[#1a1a1a]">Enablement Planning Doc Link</Label>
                   <Input
                     value={editForm.planningDocLink || ""}
                     onChange={(e) => setEditForm({ ...editForm, planningDocLink: e.target.value })}
+                    placeholder="https://..."
+                    className="border-[#e5e5e5]"
+                  />
+                </div>
+              </div>
+
+              <div className="grid grid-cols-2 gap-4">
+                <div className="space-y-2">
+                  <Label className="text-sm font-medium text-[#1a1a1a]">Education Planning Link</Label>
+                  <Input
+                    value={editForm.educationPlanningLink || ""}
+                    onChange={(e) => setEditForm({ ...editForm, educationPlanningLink: e.target.value })}
+                    placeholder="https://..."
+                    className="border-[#e5e5e5]"
+                  />
+                </div>
+                <div className="space-y-2">
+                  <Label className="text-sm font-medium text-[#1a1a1a]">Slack Link</Label>
+                  <Input
+                    value={editForm.slackLink || ""}
+                    onChange={(e) => setEditForm({ ...editForm, slackLink: e.target.value })}
                     placeholder="https://..."
                     className="border-[#e5e5e5]"
                   />
@@ -1172,7 +1226,7 @@ export function CalendarView() {
               )}
               {viewingEvent.planningDocLink && (
                 <div>
-                  <span className="text-xs font-semibold text-[#aaa] uppercase tracking-wide">Planning Doc</span>
+                  <span className="text-xs font-semibold text-[#aaa] uppercase tracking-wide">Enablement Planning Doc</span>
                   <p className="mt-0.5">
                     <a
                       href={viewingEvent.planningDocLink}
@@ -1181,6 +1235,36 @@ export function CalendarView() {
                       className="text-sm text-gladly-green hover:underline"
                     >
                       Open document
+                    </a>
+                  </p>
+                </div>
+              )}
+              {viewingEvent.educationPlanningLink && (
+                <div>
+                  <span className="text-xs font-semibold text-[#aaa] uppercase tracking-wide">Education Planning Link</span>
+                  <p className="mt-0.5">
+                    <a
+                      href={viewingEvent.educationPlanningLink}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="text-sm text-gladly-green hover:underline"
+                    >
+                      Open document
+                    </a>
+                  </p>
+                </div>
+              )}
+              {viewingEvent.slackLink && (
+                <div>
+                  <span className="text-xs font-semibold text-[#aaa] uppercase tracking-wide">Slack Link</span>
+                  <p className="mt-0.5">
+                    <a
+                      href={viewingEvent.slackLink}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="text-sm text-gladly-green hover:underline"
+                    >
+                      Open in Slack
                     </a>
                   </p>
                 </div>

@@ -60,6 +60,8 @@ export const enablements = pgTable("enablements", {
   improvementArea: improvementAreaEnum("improvement_area"),
   owner: text("owner"),
   planningDocLink: text("planning_doc_link"),
+  educationPlanningLink: text("education_planning_link"),
+  slackLink: text("slack_link"),
   scheduledDate: timestamp("scheduled_date"),
   scheduledEndDate: timestamp("scheduled_end_date"),
   status: statusEnum("status").notNull().default("submitted"),

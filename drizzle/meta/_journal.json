@@ -15,6 +15,13 @@
       "when": 1773271913519,
       "tag": "0001_thick_black_bolt",
       "breakpoints": true
+    },
+    {
+      "idx": 2,
+      "version": "7",
+      "when": 1774908965069,
+      "tag": "0002_smooth_exiles",
+      "breakpoints": true
     }
   ]
 }
