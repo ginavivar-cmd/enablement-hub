@@ -204,7 +204,7 @@ export function IntakeForm({ onSuccess }: { onSuccess?: () => void }) {
           />
         </div>
         <div className="space-y-2">
-          <Label className="text-[#1a1a1a] font-medium text-sm">Slack Link</Label>
+          <Label className="text-[#1a1a1a] font-medium text-sm">Slack Message or Release Brief Link</Label>
           <Input
             value={slackLink}
             onChange={(e) => setSlackLink(e.target.value)}

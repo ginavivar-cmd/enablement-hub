@@ -673,7 +673,7 @@ export function CalendarView() {
                           />
                         </div>
                         <div className="space-y-1.5">
-                          <Label className="text-xs font-medium text-[#1a1a1a]">Slack Link</Label>
+                          <Label className="text-xs font-medium text-[#1a1a1a]">Slack Message or Release Brief Link</Label>
                           <Input
                             value={expandedForm.slackLink || ""}
                             onChange={(e) => setExpandedForm({ ...expandedForm, slackLink: e.target.value })}
@@ -972,7 +972,7 @@ export function CalendarView() {
                   />
                 </div>
                 <div className="space-y-2">
-                  <Label className="text-sm font-medium text-[#1a1a1a]">Slack Link</Label>
+                  <Label className="text-sm font-medium text-[#1a1a1a]">Slack Message or Release Brief Link</Label>
                   <Input
                     value={editForm.slackLink || ""}
                     onChange={(e) => setEditForm({ ...editForm, slackLink: e.target.value })}
@@ -1256,7 +1256,7 @@ export function CalendarView() {
               )}
               {viewingEvent.slackLink && (
                 <div>
-                  <span className="text-xs font-semibold text-[#aaa] uppercase tracking-wide">Slack Link</span>
+                  <span className="text-xs font-semibold text-[#aaa] uppercase tracking-wide">Slack Message or Release Brief Link</span>
                   <p className="mt-0.5">
                     <a
                       href={viewingEvent.slackLink}
@@ -1264,7 +1264,7 @@ export function CalendarView() {
                       rel="noopener noreferrer"
                       className="text-sm text-gladly-green hover:underline"
                     >
-                      Open in Slack
+                      Open link
                     </a>
                   </p>
                 </div>
