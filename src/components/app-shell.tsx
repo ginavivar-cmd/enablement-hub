@@ -5,6 +5,7 @@ import { usePathname, useRouter } from "next/navigation";
 import { NotificationBell } from "@/components/notification-bell";
 
 const TABS = [
+  { label: "Launches", href: "/launches" },
   { label: "Intake", href: "/intake" },
   { label: "What We're Hearing", href: "/hearing" },
   { label: "Calendar", href: "/calendar" },
@@ -38,7 +39,7 @@ export function AppShell({
               E
             </div>
             <span className="text-sm font-bold text-[#1a1a1a] hidden sm:inline">
-              Enablement Planning
+              Education + Enablement Tracker
             </span>
           </Link>
 

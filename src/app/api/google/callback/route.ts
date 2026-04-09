@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from "next/server";
-import { getSession } from "@/lib/auth";
+import { getSession } from "@/lib/auth-server";
 import { setSetting } from "@/lib/google-calendar";
 
 const GOOGLE_CALENDAR_API = "https://www.googleapis.com/calendar/v3";

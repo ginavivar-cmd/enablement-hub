@@ -1,22 +1,23 @@
-import type { Metadata } from "next";
-import { TooltipProvider } from "@/components/ui/tooltip";
-import "./globals.css";
+import type { Metadata } from 'next'
+import { Inter } from 'next/font/google'
+import './globals.css'
+import { AuthProvider } from '@/lib/auth'
+
+const inter = Inter({ subsets: ['latin'] })
 
 export const metadata: Metadata = {
-  title: "Enablement Planning",
-  description: "Internal enablement planning and tracking tool",
-};
+  title: 'Education + Enablement Tracker',
+  description: 'Gladly Education + Revenue Enablement activity tracker',
+}
 
-export default function RootLayout({
-  children,
-}: Readonly<{
-  children: React.ReactNode;
-}>) {
+export default function RootLayout({ children }: { children: React.ReactNode }) {
   return (
     <html lang="en">
-      <body className="antialiased">
-        <TooltipProvider>{children}</TooltipProvider>
+      <body className={`${inter.className} bg-slate-100 text-slate-900`}>
+        <AuthProvider>
+          {children}
+        </AuthProvider>
       </body>
     </html>
-  );
+  )
 }

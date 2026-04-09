@@ -1,79 +1,65 @@
-"use client";
-
-import { useState } from "react";
-import { useRouter } from "next/navigation";
-import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
+'use client'
+import { useState } from 'react'
+import { useRouter } from 'next/navigation'
+import { useAuth } from '@/lib/auth'
 
 export default function LoginPage() {
-  const [password, setPassword] = useState("");
-  const [error, setError] = useState("");
-  const [loading, setLoading] = useState(false);
-  const router = useRouter();
+  const [value, setValue] = useState('')
+  const [error, setError] = useState(false)
+  const { login } = useAuth()
+  const router = useRouter()
 
-  async function handleSubmit(e: React.FormEvent) {
-    e.preventDefault();
-    setError("");
-    setLoading(true);
-
-    try {
-      const res = await fetch("/api/auth", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ password }),
-      });
-
-      if (!res.ok) {
-        setError("Name not recognized. Try your full name.");
-        setLoading(false);
-        return;
-      }
-
-      router.push("/intake");
-    } catch {
-      setError("Something went wrong. Please try again.");
-      setLoading(false);
+  function handleLogin() {
+    const ok = login(value)
+    if (ok) {
+      router.push('/launches')
+    } else {
+      setError(true)
     }
   }
 
   return (
-    <div className="flex min-h-screen flex-col items-center justify-center bg-[#f0f0f0]">
-      <div className="w-full max-w-sm space-y-8">
-        {/* Logo */}
-        <div className="text-center">
-          <div className="mx-auto mb-4 flex h-14 w-14 items-center justify-center rounded-xl bg-gladly-green text-white text-2xl font-bold">
-            E
+    <div className="min-h-screen bg-slate-950 flex items-center justify-center">
+      <div className="w-full max-w-sm px-6">
+        <div className="text-center mb-10">
+          <div className="inline-flex items-center justify-center w-12 h-12 rounded-xl bg-teal-500 mb-4">
+            <svg className="w-6 h-6 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 10V3L4 14h7v7l9-11h-7z" />
+            </svg>
           </div>
-          <h1 className="text-2xl font-bold text-[#1a1a1a]">Enablement Planning</h1>
-          <p className="mt-2 text-sm text-[#737373]">
-            Sign in with your full name
-          </p>
+          <h1 className="text-white font-bold text-xl tracking-wide leading-tight">
+            Education +<br />Enablement Tracker
+          </h1>
+          <p className="text-slate-400 text-sm mt-1">Gladly</p>
         </div>
 
-        {/* Form */}
-        <div className="rounded-lg bg-white p-6 shadow-sm">
-          <form onSubmit={handleSubmit} className="space-y-4">
-            <Input
-              type="text"
-              placeholder="First and Last Name"
-              value={password}
-              onChange={(e) => setPassword(e.target.value)}
-              className="h-12 border-[#e5e5e5] bg-white text-[#1a1a1a] placeholder:text-[#aaa] focus-visible:ring-gladly-green"
-              autoFocus
-            />
-            {error && (
-              <p className="text-sm text-red-600">{error}</p>
-            )}
-            <Button
-              type="submit"
-              className="h-12 w-full bg-gladly-green text-white font-medium hover:bg-gladly-green/90"
-              disabled={loading}
-            >
-              {loading ? "Signing in..." : "Sign In"}
-            </Button>
-          </form>
+        <div className="bg-slate-900 border border-slate-700 rounded-2xl p-6">
+          <label className="block text-slate-300 text-sm font-medium mb-2">
+            Enter your name or access code
+          </label>
+          <input
+            type="text"
+            value={value}
+            onChange={e => { setValue(e.target.value); setError(false) }}
+            onKeyDown={e => e.key === 'Enter' && handleLogin()}
+            placeholder="e.g. Gina"
+            className="w-full bg-slate-800 border border-slate-600 text-white placeholder-slate-500 rounded-lg px-4 py-3 text-sm focus:outline-none focus:ring-2 focus:ring-teal-500 focus:border-transparent"
+          />
+          {error && (
+            <p className="text-red-400 text-xs mt-2">That name or code wasn't recognized. Try again.</p>
+          )}
+          <button
+            onClick={handleLogin}
+            className="w-full mt-4 bg-teal-600 hover:bg-teal-500 text-white font-semibold py-3 rounded-lg text-sm transition-colors"
+          >
+            Sign In →
+          </button>
+          <p className="text-slate-500 text-xs text-center mt-4 leading-relaxed">
+            Education or Revenue Enablement team? Enter your first name.<br />
+            Guests enter the access code.
+          </p>
         </div>
       </div>
     </div>
-  );
+  )
 }

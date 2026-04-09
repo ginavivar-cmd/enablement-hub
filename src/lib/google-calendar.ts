@@ -203,16 +203,27 @@ export async function createCalendarEvent(
   const description = buildDescription(data);
   const colorId = TYPE_COLOR_IDS[data.type || ""] || undefined;
 
-  const event = {
+  const isLive = data.type === "Live";
+
+  const event: Record<string, unknown> = {
     summary: data.title,
     description,
     start: times.start,
     end: times.end,
     ...(colorId && { colorId }),
+    ...(isLive && {
+      conferenceData: {
+        createRequest: {
+          requestId: `enablement-${Date.now()}`,
+          conferenceSolutionKey: { type: "hangoutsMeet" },
+        },
+      },
+    }),
   };
 
+  const conferenceParam = isLive ? "&conferenceDataVersion=1" : "";
   const res = await fetch(
-    `${GOOGLE_CALENDAR_API}/calendars/${encodeURIComponent(calendarId)}/events`,
+    `${GOOGLE_CALENDAR_API}/calendars/${encodeURIComponent(calendarId)}/events?${conferenceParam}`,
     {
       method: "POST",
       headers: {
@@ -244,16 +255,27 @@ export async function updateCalendarEvent(
   const description = buildDescription(data);
   const colorId = TYPE_COLOR_IDS[data.type || ""] || undefined;
 
-  const event = {
+  const isLive = data.type === "Live";
+
+  const event: Record<string, unknown> = {
     summary: data.title,
     description,
     start: times.start,
     end: times.end,
     ...(colorId && { colorId }),
+    ...(isLive && {
+      conferenceData: {
+        createRequest: {
+          requestId: `enablement-${eventId}-${Date.now()}`,
+          conferenceSolutionKey: { type: "hangoutsMeet" },
+        },
+      },
+    }),
   };
 
+  const conferenceParam = isLive ? "?conferenceDataVersion=1" : "";
   const res = await fetch(
-    `${GOOGLE_CALENDAR_API}/calendars/${encodeURIComponent(calendarId)}/events/${encodeURIComponent(eventId)}`,
+    `${GOOGLE_CALENDAR_API}/calendars/${encodeURIComponent(calendarId)}/events/${encodeURIComponent(eventId)}${conferenceParam}`,
     {
       method: "PUT",
       headers: {

@@ -1,16 +1,27 @@
-import { redirect } from "next/navigation";
-import { getSession } from "@/lib/auth";
-import { AppShell } from "@/components/app-shell";
+'use client'
+import { useEffect } from 'react'
+import { useRouter } from 'next/navigation'
+import { useAuth } from '@/lib/auth'
+import Sidebar from '@/components/sidebar'
+import ViewOnlyBanner from '@/components/view-only-banner'
 
-export default async function AppLayout({
-  children,
-}: {
-  children: React.ReactNode;
-}) {
-  const session = await getSession();
-  if (!session) {
-    redirect("/login");
-  }
+export default function AppLayout({ children }: { children: React.ReactNode }) {
+  const { user } = useAuth()
+  const router = useRouter()
 
-  return <AppShell user={session}>{children}</AppShell>;
+  useEffect(() => {
+    if (!user) router.replace('/login')
+  }, [user, router])
+
+  if (!user) return null
+
+  return (
+    <div className="flex h-screen overflow-hidden bg-slate-100">
+      <Sidebar />
+      <main className="flex-1 overflow-auto flex flex-col">
+        <ViewOnlyBanner />
+        {children}
+      </main>
+    </div>
+  )
 }

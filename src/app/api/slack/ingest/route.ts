@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from "next/server";
-import { getSession } from "@/lib/auth";
+import { getSession } from "@/lib/auth-server";
 import { scanForOpportunities } from "@/lib/ai-scanner";
 import { db } from "@/db";
 import { slackScanLog } from "@/db/schema";
