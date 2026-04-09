@@ -40,11 +40,11 @@ const STATUS_COLOR: Record<string, string> = {
   archived: 'bg-slate-100 text-slate-500',
 }
 
-// Display tier → DB enum
-const TIER_TO_DB: Record<string, string> = {
-  'Small': 'small',
-  'Medium': 'medium',
-  'Large / XL': 'large_xl',
+// Size display → DB tier enum (used in launch cards)
+const SIZE_DISPLAY: Record<string, string> = {
+  'small': 'Small',
+  'medium': 'Medium',
+  'large_xl': 'Large / XL',
 }
 
 // Track label → color
@@ -114,7 +114,8 @@ export default function LaunchesPage() {
   // ── New Launch form state ──────────────────────────────
   const [showModal, setShowModal] = useState(false)
   const [formName, setFormName] = useState('')
-  const [formTier, setFormTier] = useState('')
+  const [formSize, setFormSize] = useState('')
+  const [formTracks, setFormTracks] = useState<string[]>([])
   const [formTargetDate, setFormTargetDate] = useState('')
   const [formDescription, setFormDescription] = useState('')
   const [formNotionUrl, setFormNotionUrl] = useState('')
@@ -144,7 +145,7 @@ export default function LaunchesPage() {
   }, [fetchLaunches])
 
   function resetForm() {
-    setFormName(''); setFormTier(''); setFormTargetDate(''); setFormDescription('')
+    setFormName(''); setFormSize(''); setFormTracks([]); setFormTargetDate(''); setFormDescription('')
     setFormNotionUrl(''); setFormPlanningDocUrl('')
     // setNotionInput(''); setNotionError(''); setNotionImported(false)
   }
@@ -155,18 +156,21 @@ export default function LaunchesPage() {
   // Notion import — disabled for now, kept for re-enable
   // async function handleNotionImport() { ... }
 
+  const SIZE_TO_DB: Record<string, string> = { 'Small': 'small', 'Medium': 'medium', 'Large': 'large_xl', 'XL': 'large_xl' }
+
   async function handleCreateLaunch() {
-    if (!formName.trim() || !formTier) return
+    if (!formName.trim() || !formSize) return
     setCreating(true)
     try {
       const body: Record<string, unknown> = {
         name: formName.trim(),
-        tier: TIER_TO_DB[formTier] || formTier,
+        tier: SIZE_TO_DB[formSize] || 'medium',
       }
       if (formDescription.trim()) body.description = formDescription.trim()
       if (formTargetDate) body.targetDate = formTargetDate
       if (formNotionUrl.trim()) body.notionBriefUrl = formNotionUrl.trim()
       if (formPlanningDocUrl.trim()) body.planningDocUrl = formPlanningDocUrl.trim()
+      if (formTracks.length > 0) body.tracks = formTracks
 
       await apiFetch('/api/launches', {
         method: 'POST',
@@ -283,29 +287,77 @@ export default function LaunchesPage() {
                 />
               </div>
 
-              {/* Tier + Target Date */}
+              {/* Size + Target Date */}
               <div className="grid grid-cols-2 gap-4">
                 <div>
-                  <label className="block text-sm font-medium text-slate-700 mb-1.5">Tier *</label>
+                  <label className="block text-sm font-medium text-slate-700 mb-1.5">Size *</label>
                   <select
-                    value={formTier}
-                    onChange={e => setFormTier(e.target.value)}
+                    value={formSize}
+                    onChange={e => setFormSize(e.target.value)}
                     className="w-full text-sm border border-slate-200 rounded-lg px-3 py-2.5 focus:outline-none focus:ring-2 focus:ring-teal-400 bg-white"
                   >
-                    <option value="">Select tier...</option>
+                    <option value="">Select size...</option>
                     <option value="Small">Small</option>
                     <option value="Medium">Medium</option>
-                    <option value="Large / XL">Large / XL</option>
+                    <option value="Large">Large</option>
+                    <option value="XL">XL</option>
                   </select>
                 </div>
                 <div>
-                  <label className="block text-sm font-medium text-slate-700 mb-1.5">Target Date</label>
+                  <label className="block text-sm font-medium text-slate-700 mb-1.5">GA Date</label>
                   <input
                     type="date"
                     value={formTargetDate}
                     onChange={e => setFormTargetDate(e.target.value)}
                     className="w-full text-sm border border-slate-200 rounded-lg px-3 py-2.5 focus:outline-none focus:ring-2 focus:ring-teal-400"
                   />
+                </div>
+              </div>
+
+              {/* Programming Tracks */}
+              <div>
+                <label className="block text-sm font-medium text-slate-700 mb-1.5">Programming Tracks</label>
+                <p className="text-xs text-slate-400 mb-3">Select the tracks that apply. This determines the default checklist template.</p>
+                <div className="space-y-2">
+                  {[
+                    { code: 'T1', label: 'T1 · Pipeline Driver', desc: 'Drives pipeline — teams need to pitch + demo' },
+                    { code: 'T2', label: 'T2 · Retention Play', desc: 'Helps CSMs and SAMs expand or protect accounts' },
+                    { code: 'T3', label: 'T3 · Efficiency Gain', desc: 'Makes reps faster — workflow, tooling, or process' },
+                    { code: 'T4', label: 'T4 · Education / Awareness', desc: 'Builds knowledge — not directly tied to a deal motion' },
+                    { code: 'T5', label: 'T5 · Retire + Replace', desc: 'Something going away — change management needed' },
+                    { code: 'T6', label: 'T6 · Partner / Migration', desc: 'Partnership or competitive displacement play' },
+                    { code: 'Custom', label: 'Custom / Doesn\'t fit a track', desc: 'Start with a blank checklist' },
+                  ].map(track => {
+                    const selected = formTracks.includes(track.code)
+                    return (
+                      <button
+                        key={track.code}
+                        type="button"
+                        onClick={() => setFormTracks(prev =>
+                          prev.includes(track.code) ? prev.filter(t => t !== track.code) : [...prev, track.code]
+                        )}
+                        className={`w-full text-left rounded-lg border p-3 transition-all flex items-start gap-3 ${
+                          selected
+                            ? 'border-teal-400 bg-teal-50/50 ring-1 ring-teal-400/30'
+                            : 'border-slate-200 bg-white hover:border-slate-300'
+                        }`}
+                      >
+                        <div className={`mt-0.5 w-4 h-4 rounded border-2 flex items-center justify-center flex-shrink-0 ${
+                          selected ? 'border-teal-600 bg-teal-600' : 'border-slate-300'
+                        }`}>
+                          {selected && (
+                            <svg className="w-2.5 h-2.5 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={3} d="M5 13l4 4L19 7" />
+                            </svg>
+                          )}
+                        </div>
+                        <div>
+                          <div className={`text-sm font-medium ${selected ? 'text-teal-800' : 'text-slate-700'}`}>{track.label}</div>
+                          <div className="text-xs text-slate-400 mt-0.5">{track.desc}</div>
+                        </div>
+                      </button>
+                    )
+                  })}
                 </div>
               </div>
 
@@ -353,7 +405,7 @@ export default function LaunchesPage() {
               </button>
               <button
                 onClick={handleCreateLaunch}
-                disabled={!formName.trim() || !formTier || creating}
+                disabled={!formName.trim() || !formSize || creating}
                 className="bg-teal-600 hover:bg-teal-700 disabled:bg-slate-300 text-white text-sm font-medium px-5 py-2 rounded-lg transition-colors"
               >
                 {creating ? 'Creating...' : 'Create Launch'}
