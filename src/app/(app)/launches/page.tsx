@@ -287,78 +287,140 @@ export default function LaunchesPage() {
                 />
               </div>
 
-              {/* Size + Target Date */}
-              <div className="grid grid-cols-2 gap-4">
-                <div>
-                  <label className="block text-sm font-medium text-slate-700 mb-1.5">Size *</label>
-                  <select
-                    value={formSize}
-                    onChange={e => setFormSize(e.target.value)}
-                    className="w-full text-sm border border-slate-200 rounded-lg px-3 py-2.5 focus:outline-none focus:ring-2 focus:ring-teal-400 bg-white"
-                  >
-                    <option value="">Select size...</option>
-                    <option value="Small">Small</option>
-                    <option value="Medium">Medium</option>
-                    <option value="Large">Large</option>
-                    <option value="XL">XL</option>
-                  </select>
+              {/* GA Date */}
+              <div>
+                <label className="block text-sm font-medium text-slate-700 mb-1.5">GA Date</label>
+                <input
+                  type="date"
+                  value={formTargetDate}
+                  onChange={e => setFormTargetDate(e.target.value)}
+                  className="w-full text-sm border border-slate-200 rounded-lg px-3 py-2.5 focus:outline-none focus:ring-2 focus:ring-teal-400"
+                />
+              </div>
+
+              {/* Launch Tier */}
+              <div>
+                <div className="flex items-center gap-1.5 mb-3">
+                  <label className="text-sm font-medium text-slate-700">Launch Tier</label>
+                  <span className="relative group">
+                    <svg className="w-4 h-4 text-slate-400 cursor-help" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" /></svg>
+                    <span className="pointer-events-none absolute bottom-full left-1/2 -translate-x-1/2 mb-2 w-52 bg-slate-900 text-slate-200 text-[11px] leading-relaxed px-3 py-2 rounded-lg shadow-xl opacity-0 group-hover:opacity-100 transition-opacity z-50 whitespace-normal text-center">
+                      Determines checklist depth and enablement scope
+                    </span>
+                  </span>
                 </div>
-                <div>
-                  <label className="block text-sm font-medium text-slate-700 mb-1.5">GA Date</label>
-                  <input
-                    type="date"
-                    value={formTargetDate}
-                    onChange={e => setFormTargetDate(e.target.value)}
-                    className="w-full text-sm border border-slate-200 rounded-lg px-3 py-2.5 focus:outline-none focus:ring-2 focus:ring-teal-400"
-                  />
+                <div className="grid grid-cols-4 gap-3">
+                  {[
+                    { value: 'Small', sub: 'Minor update' },
+                    { value: 'Medium', sub: 'Feature launch' },
+                    { value: 'Large', sub: 'Major launch' },
+                    { value: 'XL', sub: 'Hero launch' },
+                  ].map(s => (
+                    <button
+                      key={s.value}
+                      type="button"
+                      onClick={() => setFormSize(s.value)}
+                      className={`rounded-xl border-2 px-3 py-3 text-center transition-all ${
+                        formSize === s.value
+                          ? 'border-teal-500 bg-teal-50'
+                          : 'border-slate-200 bg-white hover:border-slate-300'
+                      }`}
+                    >
+                      <div className={`text-sm font-bold ${formSize === s.value ? 'text-slate-800' : 'text-slate-700'}`}>{s.value}</div>
+                      <div className={`text-xs mt-0.5 ${formSize === s.value ? 'text-teal-600' : 'text-slate-400'}`}>{s.sub}</div>
+                    </button>
+                  ))}
                 </div>
               </div>
 
-              {/* Programming Tracks */}
+              {/* What kind of launch is this? */}
               <div>
-                <label className="block text-sm font-medium text-slate-700 mb-1.5">Programming Tracks</label>
-                <p className="text-xs text-slate-400 mb-3">Select the tracks that apply. This determines the default checklist template.</p>
-                <div className="space-y-2">
+                <h3 className="text-sm font-bold text-slate-800 mb-1">What kind of launch is this?</h3>
+                <p className="text-xs text-slate-400 mb-4">Select all that apply — or choose Custom if none fit. The checklist will be pre-populated and fully editable.</p>
+                <div className="space-y-2.5">
                   {[
                     { code: 'T1', label: 'T1 · Pipeline Driver', desc: 'Drives pipeline — teams need to pitch + demo' },
-                    { code: 'T2', label: 'T2 · Retention Play', desc: 'Helps CSMs and SAMs expand or protect accounts' },
-                    { code: 'T3', label: 'T3 · Efficiency Gain', desc: 'Makes reps faster — workflow, tooling, or process' },
-                    { code: 'T4', label: 'T4 · Education / Awareness', desc: 'Builds knowledge — not directly tied to a deal motion' },
+                    { code: 'T2', label: 'T2 · Blocker Buster', desc: 'Competitive gap or objection to address' },
+                    { code: 'T3', label: 'T3 · Unlearn / Relearn', desc: 'Product fundamentally changed — old models wrong' },
+                    { code: 'T4', label: 'T4 · New Audience', desc: 'New buyer or persona — reposition and tailor' },
                     { code: 'T5', label: 'T5 · Retire + Replace', desc: 'Something going away — change management needed' },
                     { code: 'T6', label: 'T6 · Partner / Migration', desc: 'Partnership or competitive displacement play' },
-                    { code: 'Custom', label: 'Custom / Doesn\'t fit a track', desc: 'Start with a blank checklist' },
                   ].map(track => {
                     const selected = formTracks.includes(track.code)
                     return (
                       <button
                         key={track.code}
                         type="button"
-                        onClick={() => setFormTracks(prev =>
-                          prev.includes(track.code) ? prev.filter(t => t !== track.code) : [...prev, track.code]
-                        )}
-                        className={`w-full text-left rounded-lg border p-3 transition-all flex items-start gap-3 ${
+                        onClick={() => {
+                          setFormTracks(prev => {
+                            const without = prev.filter(t => t !== 'Custom')
+                            return without.includes(track.code) ? without.filter(t => t !== track.code) : [...without, track.code]
+                          })
+                        }}
+                        className={`w-full text-left rounded-xl border-2 px-4 py-3.5 transition-all flex items-start gap-3.5 ${
                           selected
-                            ? 'border-teal-400 bg-teal-50/50 ring-1 ring-teal-400/30'
+                            ? 'border-teal-500 bg-teal-50/40'
                             : 'border-slate-200 bg-white hover:border-slate-300'
                         }`}
                       >
-                        <div className={`mt-0.5 w-4 h-4 rounded border-2 flex items-center justify-center flex-shrink-0 ${
+                        <div className={`mt-0.5 w-5 h-5 rounded border-2 flex items-center justify-center flex-shrink-0 ${
                           selected ? 'border-teal-600 bg-teal-600' : 'border-slate-300'
                         }`}>
                           {selected && (
-                            <svg className="w-2.5 h-2.5 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <svg className="w-3 h-3 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={3} d="M5 13l4 4L19 7" />
                             </svg>
                           )}
                         </div>
                         <div>
-                          <div className={`text-sm font-medium ${selected ? 'text-teal-800' : 'text-slate-700'}`}>{track.label}</div>
+                          <div className={`text-sm font-bold ${selected ? 'text-slate-800' : 'text-slate-700'}`}>{track.label}</div>
                           <div className="text-xs text-slate-400 mt-0.5">{track.desc}</div>
                         </div>
                       </button>
                     )
                   })}
+                  {/* Custom — visually separated */}
+                  {(() => {
+                    const customSelected = formTracks.includes('Custom')
+                    return (
+                      <button
+                        type="button"
+                        onClick={() => {
+                          setFormTracks(prev =>
+                            prev.includes('Custom') ? prev.filter(t => t !== 'Custom') : ['Custom']
+                          )
+                        }}
+                        className={`w-full text-left rounded-xl border-2 border-dashed px-4 py-3.5 transition-all flex items-start gap-3.5 ${
+                          customSelected
+                            ? 'border-teal-500 bg-teal-50/40'
+                            : 'border-slate-300 bg-slate-50/50 hover:border-slate-400'
+                        }`}
+                      >
+                        <div className={`mt-0.5 w-5 h-5 rounded border-2 flex items-center justify-center flex-shrink-0 ${
+                          customSelected ? 'border-teal-600 bg-teal-600' : 'border-slate-300'
+                        }`}>
+                          {customSelected && (
+                            <svg className="w-3 h-3 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={3} d="M5 13l4 4L19 7" />
+                            </svg>
+                          )}
+                        </div>
+                        <div>
+                          <div className={`text-sm font-bold ${customSelected ? 'text-slate-800' : 'text-slate-600'}`}>Custom / Doesn&apos;t fit a track</div>
+                          <div className="text-xs text-slate-400 mt-0.5">Start with a blank checklist and build from scratch</div>
+                        </div>
+                      </button>
+                    )
+                  })()}
                 </div>
+
+                {/* Suggestion hint */}
+                {formTracks.length > 0 && (
+                  <div className="mt-4 bg-teal-50 border border-teal-200 rounded-lg px-4 py-2.5 flex items-center gap-2">
+                    <svg className="w-4 h-4 text-teal-600 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" /></svg>
+                    <span className="text-xs text-teal-700 font-medium">Activities will be suggested based on tier + tracks selected above</span>
+                  </div>
+                )}
               </div>
 
               {/* Description */}
