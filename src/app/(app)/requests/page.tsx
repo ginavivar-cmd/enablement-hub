@@ -1,7 +1,10 @@
 'use client'
 import { useState } from 'react'
 import Link from 'next/link'
+import { useRouter } from 'next/navigation'
 import { useAuth } from '@/lib/auth-context'
+import { KebabMenu } from '@/components/kebab-menu'
+import { ConfirmDialog } from '@/components/confirm-dialog'
 
 const REQUESTS = [
   {
@@ -32,9 +35,13 @@ const REQUESTS = [
 
 export default function RequestsPage() {
   const { isEditor } = useAuth()
+  const router = useRouter()
   const [scannerOpen, setScannerOpen] = useState(false)
   const [scanInput, setScanInput] = useState('')
   const [scanResult, setScanResult] = useState(false)
+  const [requests, setRequests] = useState(REQUESTS)
+  const [deleteTarget, setDeleteTarget] = useState<string | null>(null)
+  const reqToDelete = requests.find(r => r.id === deleteTarget)
 
   return (
     <div className="p-8">
@@ -108,9 +115,9 @@ export default function RequestsPage() {
 
       {/* Request cards */}
       <div className="space-y-3">
-        {REQUESTS.map(req => (
+        {requests.map(req => (
+          <div key={req.id} className="relative">
           <Link
-            key={req.id}
             href={`/requests/${req.id}`}
             className="block bg-white rounded-xl border border-slate-200 p-5 hover:border-teal-400 hover:shadow-sm transition-all"
           >
@@ -129,8 +136,27 @@ export default function RequestsPage() {
               <svg className="w-4 h-4 text-slate-300 flex-shrink-0 mt-1" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" /></svg>
             </div>
           </Link>
+          {isEditor && (
+            <div className="absolute top-3 right-3 z-10">
+              <KebabMenu items={[
+                { label: 'Edit', onClick: () => router.push(`/requests/${req.id}`) },
+                { label: 'Export PDF', onClick: () => window.print() },
+                { label: 'Delete', variant: 'danger', onClick: () => setDeleteTarget(req.id) },
+              ]} />
+            </div>
+          )}
+          </div>
         ))}
       </div>
+
+      {deleteTarget && reqToDelete && (
+        <ConfirmDialog
+          title={`Delete ${reqToDelete.title}?`}
+          description="This cannot be undone."
+          onConfirm={() => { setRequests(prev => prev.filter(r => r.id !== deleteTarget)); setDeleteTarget(null) }}
+          onCancel={() => setDeleteTarget(null)}
+        />
+      )}
     </div>
   )
 }

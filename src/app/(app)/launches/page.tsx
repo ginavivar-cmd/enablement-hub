@@ -1,7 +1,10 @@
 'use client'
 import { useState, useRef } from 'react'
 import Link from 'next/link'
+import { useRouter } from 'next/navigation'
 import { useAuth } from '@/lib/auth-context'
+import { KebabMenu } from '@/components/kebab-menu'
+import { ConfirmDialog } from '@/components/confirm-dialog'
 
 // ── Size → Tier mapping ────────────────────────────────────
 const SIZE_TO_TIER: Record<string, string> = {
@@ -60,8 +63,12 @@ const FILTERS = ['All', 'In Progress', 'Planning', 'Shipped']
 
 export default function LaunchesPage() {
   const { isEditor } = useAuth()
+  const router = useRouter()
   const [filter, setFilter] = useState('All')
   const [showModal, setShowModal] = useState(false)
+  const [launches, setLaunches] = useState(LAUNCHES)
+  const [deleteTarget, setDeleteTarget] = useState<string | null>(null)
+  const launchToDelete = launches.find(l => l.id === deleteTarget)
 
   // ── New Launch form state ──────────────────────────────
   const [formName, setFormName] = useState('')
@@ -116,7 +123,7 @@ export default function LaunchesPage() {
     }
   }
 
-  const filtered = filter === 'All' ? LAUNCHES : LAUNCHES.filter(l => l.status === filter)
+  const filtered = filter === 'All' ? launches : launches.filter(l => l.status === filter)
   const pct = (done: number, total: number) => Math.round((done / total) * 100)
 
   return (
@@ -290,8 +297,8 @@ export default function LaunchesPage() {
 
       <div className="space-y-4">
         {filtered.map(launch => (
+          <div key={launch.id} className="relative">
           <Link
-            key={launch.id}
             href={`/launches/${launch.id}`}
             className="block bg-white rounded-xl border border-slate-200 p-6 hover:border-teal-400 hover:shadow-md transition-all cursor-pointer"
           >
@@ -362,8 +369,27 @@ export default function LaunchesPage() {
               </div>
             </div>
           </Link>
+          {isEditor && (
+            <div className="absolute top-4 right-4 z-10">
+              <KebabMenu items={[
+                { label: 'Edit', onClick: () => router.push(`/launches/${launch.id}`) },
+                { label: 'Export PDF', onClick: () => window.print() },
+                { label: 'Delete', variant: 'danger', onClick: () => setDeleteTarget(launch.id) },
+              ]} />
+            </div>
+          )}
+          </div>
         ))}
       </div>
+
+      {deleteTarget && launchToDelete && (
+        <ConfirmDialog
+          title={`Delete ${launchToDelete.name}?`}
+          description="This cannot be undone."
+          onConfirm={() => { setLaunches(prev => prev.filter(l => l.id !== deleteTarget)); setDeleteTarget(null) }}
+          onCancel={() => setDeleteTarget(null)}
+        />
+      )}
     </div>
   )
 }
