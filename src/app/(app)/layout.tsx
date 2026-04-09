@@ -1,7 +1,7 @@
 'use client'
 import { useEffect } from 'react'
 import { useRouter } from 'next/navigation'
-import { useAuth } from '@/lib/auth'
+import { useAuth } from '@/lib/auth-context'
 import Sidebar from '@/components/sidebar'
 import ViewOnlyBanner from '@/components/view-only-banner'
 

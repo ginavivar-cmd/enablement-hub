@@ -1,7 +1,7 @@
 'use client'
 import { useState } from 'react'
 import Link from 'next/link'
-import { useAuth } from '@/lib/auth'
+import { useAuth } from '@/lib/auth-context'
 import { ActivityDrawer, type ActivityType, type DrawerActivity } from '@/components/activity-drawer'
 
 function inferRequestType(name: string, typeLabel: string): ActivityType {

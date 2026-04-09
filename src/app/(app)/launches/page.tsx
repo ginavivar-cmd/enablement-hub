@@ -1,7 +1,7 @@
 'use client'
 import { useState, useRef } from 'react'
 import Link from 'next/link'
-import { useAuth } from '@/lib/auth'
+import { useAuth } from '@/lib/auth-context'
 
 // ── Size → Tier mapping ────────────────────────────────────
 const SIZE_TO_TIER: Record<string, string> = {
