@@ -23,7 +23,9 @@ export function validateLogin(password: string): {
   displayName: string;
 } | null {
   const normalized = password.trim().toLowerCase();
-  const user = USERS.find((u) => u.name.toLowerCase() === normalized);
+  const user = USERS.find(
+    (u) => u.key === normalized || u.name.toLowerCase() === normalized
+  );
   if (!user) return null;
   return { name: user.name, displayName: user.displayName };
 }

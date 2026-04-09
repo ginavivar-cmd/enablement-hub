@@ -6,13 +6,14 @@ import Sidebar from '@/components/sidebar'
 import ViewOnlyBanner from '@/components/view-only-banner'
 
 export default function AppLayout({ children }: { children: React.ReactNode }) {
-  const { user } = useAuth()
+  const { user, loading } = useAuth()
   const router = useRouter()
 
   useEffect(() => {
-    if (!user) router.replace('/login')
-  }, [user, router])
+    if (!loading && !user) router.replace('/login')
+  }, [user, loading, router])
 
+  if (loading) return <div className="flex h-screen items-center justify-center bg-slate-100"><div className="text-slate-400 text-sm">Loading...</div></div>
   if (!user) return null
 
   return (

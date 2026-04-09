@@ -87,9 +87,10 @@ export const SLACK_CHANNELS = [
 ] as const;
 
 export const USERS = [
-  { name: "Gina Vivar", displayName: "Gina" },
-  { name: "Christian Shockley", displayName: "Christian" },
-  { name: "Gerard Urbano", displayName: "Gerard" },
-  { name: "Emily Moore", displayName: "Emily" },
-  { name: "Eliza Wiraatmadja", displayName: "Eliza" },
+  { key: "gina", name: "Gina Vivar", displayName: "Gina" },
+  { key: "christian", name: "Christian Shockley", displayName: "Christian" },
+  { key: "gerard", name: "Gerard Urbano", displayName: "Gerard" },
+  { key: "emily", name: "Emily Moore", displayName: "Emily" },
+  { key: "eliza", name: "Eliza Nguyen", displayName: "Eliza" },
+  { key: "ube", name: "Guest Viewer", displayName: "Guest" },
 ];

@@ -139,6 +139,8 @@ export const activityTypeEnum = pgEnum("activity_type", [
   "live_session",
   "async",
   "asset",
+  "assessment",
+  "comms",
   "other",
 ]);
 
@@ -206,6 +208,20 @@ export const activities = pgTable("activities", {
   assetUrl: text("asset_url"),
   completed: boolean("completed").default(false),
   sortOrder: integer("sort_order").default(0),
+  // Drawer fields
+  googleMeetLink: text("google_meet_link"),
+  recordingLink: text("recording_link"),
+  audiences: jsonb("audiences"), // string[]
+  duration: text("duration"),
+  notes: text("notes"),
+  format: text("format"),
+  slideDeckLink: text("slide_deck_link"),
+  assetStatus: text("asset_status"),
+  assessmentType: text("assessment_type"),
+  passThreshold: text("pass_threshold"),
+  kirkpatrickLevel: text("kirkpatrick_level"),
+  commsType: text("comms_type"),
+  otherDescription: text("other_description"),
   createdAt: timestamp("created_at").defaultNow(),
 });
 

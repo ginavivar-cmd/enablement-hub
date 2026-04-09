@@ -9,8 +9,8 @@ export default function LoginPage() {
   const { login } = useAuth()
   const router = useRouter()
 
-  function handleLogin() {
-    const ok = login(value)
+  async function handleLogin() {
+    const ok = await login(value)
     if (ok) {
       router.push('/launches')
     } else {

@@ -1,20 +1,41 @@
 'use client'
 import { useState, useEffect } from 'react'
+import { apiFetch } from '@/lib/api'
 
 // ── Types ────────────────────────────────────────────────────
 export type ActivityType = 'live' | 'async' | 'asset' | 'assessment' | 'comms' | 'other'
 type Status = 'todo' | 'in_progress' | 'done'
 
 export interface DrawerActivity {
+  id?: string
   title: string
   type: ActivityType
   launchName: string
+  owner?: string | null
+  dueDate?: string | null
+  completed?: boolean | null
+  googleMeetLink?: string | null
+  recordingLink?: string | null
+  audiences?: string[] | null
+  duration?: string | null
+  notes?: string | null
+  format?: string | null
+  slideDeckLink?: string | null
+  assetStatus?: string | null
+  assessmentType?: string | null
+  passThreshold?: string | null
+  kirkpatrickLevel?: string | null
+  commsType?: string | null
+  otherDescription?: string | null
+  scheduledDate?: string | null
 }
 
 interface ActivityDrawerProps {
   isOpen: boolean
   onClose: () => void
   activity: DrawerActivity | null
+  onSave?: () => void
+  onRemove?: () => void
 }
 
 // ── Constants ────────────────────────────────────────────────
@@ -46,6 +67,15 @@ const PASS_THRESHOLDS = ['70%', '80%', '90%', '100%']
 const KIRKPATRICK = ['L1 Reaction', 'L2 Learning', 'L3 Behavior', 'L4 Results']
 const COMMS_TYPES = ['Slack announcement', 'Email to field', 'All-hands update', 'Manager memo', 'In-app notification']
 
+// ── Mapping helpers ─────────────────────────────────────────
+function drawerTypeToDb(t: ActivityType): string {
+  return t === 'live' ? 'live_session' : t
+}
+
+function dbTypeToDrawer(t: string): ActivityType {
+  return t === 'live_session' ? 'live' : t as ActivityType
+}
+
 // ── Helpers ──────────────────────────────────────────────────
 function Label({ children }: { children: React.ReactNode }) {
   return <label className="block text-xs font-semibold text-slate-500 mb-1.5">{children}</label>
@@ -58,12 +88,14 @@ function Select({ children, ...props }: React.SelectHTMLAttributes<HTMLSelectEle
 }
 
 // ── Component ────────────────────────────────────────────────
-export function ActivityDrawer({ isOpen, onClose, activity }: ActivityDrawerProps) {
+export function ActivityDrawer({ isOpen, onClose, activity, onSave, onRemove }: ActivityDrawerProps) {
   const [type, setType] = useState<ActivityType>('live')
   const [status, setStatus] = useState<Status>('todo')
   const [owner, setOwner] = useState('')
   const [dueDate, setDueDate] = useState('')
   const [notes, setNotes] = useState('')
+  const [saving, setSaving] = useState(false)
+  const [removing, setRemoving] = useState(false)
 
   // Live
   const [sessionDate, setSessionDate] = useState('')
@@ -100,23 +132,141 @@ export function ActivityDrawer({ isOpen, onClose, activity }: ActivityDrawerProp
   const [otherDescription, setOtherDescription] = useState('')
   const [otherLink, setOtherLink] = useState('')
 
-  // Reset when activity changes
+  // Pre-fill all fields when activity changes
   useEffect(() => {
     if (activity) {
       setType(activity.type)
-      setStatus('todo')
-      setOwner(''); setDueDate(''); setNotes('')
-      setSessionDate(''); setSessionTime(''); setDuration(''); setAudiences([]); setMeetLink(''); setRecordingLink('')
-      setAsyncFormat(''); setPublishDate(''); setWatchTime(''); setVideoLink(''); setSlideDeckLink('')
-      setAssetLink(''); setAssetStatus('')
-      setAssessmentType(''); setPassThreshold(''); setAssessmentDeadline(''); setQuizLink(''); setKirkpatrick('')
-      setCommsType(''); setSendDate(''); setDraftLink('')
-      setOtherDescription(''); setOtherLink('')
+      setStatus(activity.completed ? 'done' : 'todo')
+      setOwner(activity.owner ?? '')
+      setDueDate(activity.dueDate ? activity.dueDate.slice(0, 10) : '')
+      setNotes(activity.notes ?? '')
+
+      // Live fields
+      if (activity.scheduledDate) {
+        const sd = activity.scheduledDate.slice(0, 10)
+        setSessionDate(sd)
+        if (activity.scheduledDate.length > 10) {
+          setSessionTime(activity.scheduledDate.slice(11, 16))
+        } else {
+          setSessionTime('')
+        }
+      } else {
+        setSessionDate('')
+        setSessionTime('')
+      }
+      setDuration(activity.duration ?? '')
+      setAudiences(activity.audiences ?? [])
+      setMeetLink(activity.googleMeetLink ?? '')
+      setRecordingLink(activity.recordingLink ?? '')
+
+      // Async fields
+      setAsyncFormat(activity.format ?? '')
+      setPublishDate('')
+      setWatchTime('')
+      setVideoLink('')
+      setSlideDeckLink(activity.slideDeckLink ?? '')
+
+      // Asset
+      setAssetLink('')
+      setAssetStatus(activity.assetStatus ?? '')
+
+      // Assessment
+      setAssessmentType(activity.assessmentType ?? '')
+      setPassThreshold(activity.passThreshold ?? '')
+      setAssessmentDeadline('')
+      setQuizLink('')
+      setKirkpatrick(activity.kirkpatrickLevel ?? '')
+
+      // Comms
+      setCommsType(activity.commsType ?? '')
+      setSendDate('')
+      setDraftLink('')
+
+      // Other
+      setOtherDescription(activity.otherDescription ?? '')
+      setOtherLink('')
     }
   }, [activity])
 
   function toggleAudience(a: string) {
     setAudiences(prev => prev.includes(a) ? prev.filter(x => x !== a) : [...prev, a])
+  }
+
+  async function handleSave() {
+    if (!activity?.id || saving) return
+    setSaving(true)
+    try {
+      const body: Record<string, unknown> = {
+        type: drawerTypeToDb(type),
+        completed: status === 'done',
+        owner: owner || null,
+        dueDate: dueDate || null,
+        notes: notes || null,
+      }
+
+      if (type === 'live') {
+        let scheduledDate: string | null = null
+        if (sessionDate) {
+          scheduledDate = sessionTime ? `${sessionDate}T${sessionTime}:00` : sessionDate
+        }
+        body.scheduledDate = scheduledDate
+        body.duration = duration || null
+        body.audiences = audiences.length > 0 ? audiences : null
+        body.googleMeetLink = meetLink || null
+        body.recordingLink = recordingLink || null
+      }
+
+      if (type === 'async') {
+        body.format = asyncFormat || null
+        body.slideDeckLink = slideDeckLink || null
+      }
+
+      if (type === 'asset') {
+        body.assetStatus = assetStatus || null
+      }
+
+      if (type === 'assessment') {
+        body.assessmentType = assessmentType || null
+        body.passThreshold = passThreshold || null
+        body.kirkpatrickLevel = kirkpatrick || null
+      }
+
+      if (type === 'comms') {
+        body.commsType = commsType || null
+      }
+
+      if (type === 'other') {
+        body.otherDescription = otherDescription || null
+      }
+
+      await apiFetch(`/api/activities/${activity.id}`, {
+        method: 'PATCH',
+        body: JSON.stringify(body),
+      })
+
+      onSave?.()
+      onClose()
+    } catch (err) {
+      console.error('Failed to save activity:', err)
+    } finally {
+      setSaving(false)
+    }
+  }
+
+  async function handleRemove() {
+    if (!activity?.id || removing) return
+    setRemoving(true)
+    try {
+      await apiFetch(`/api/activities/${activity.id}`, {
+        method: 'DELETE',
+      })
+      onRemove?.()
+      onClose()
+    } catch (err) {
+      console.error('Failed to remove activity:', err)
+    } finally {
+      setRemoving(false)
+    }
   }
 
   if (!activity) return null
@@ -403,8 +553,12 @@ export function ActivityDrawer({ isOpen, onClose, activity }: ActivityDrawerProp
 
         {/* ── Footer ──────────────────────────────────────── */}
         <div className="px-6 py-4 border-t border-slate-200 flex items-center justify-between flex-shrink-0">
-          <button className="text-xs text-red-500 hover:text-red-700 font-medium transition-colors">
-            Remove activity
+          <button
+            onClick={handleRemove}
+            disabled={removing}
+            className="text-xs text-red-500 hover:text-red-700 font-medium transition-colors disabled:opacity-50"
+          >
+            {removing ? 'Removing...' : 'Remove activity'}
           </button>
           <div className="flex items-center gap-2">
             <button
@@ -413,8 +567,12 @@ export function ActivityDrawer({ isOpen, onClose, activity }: ActivityDrawerProp
             >
               Cancel
             </button>
-            <button className="bg-teal-600 hover:bg-teal-700 text-white text-sm font-medium px-5 py-2 rounded-lg transition-colors">
-              Save
+            <button
+              onClick={handleSave}
+              disabled={saving}
+              className="bg-teal-600 hover:bg-teal-700 text-white text-sm font-medium px-5 py-2 rounded-lg transition-colors disabled:opacity-50"
+            >
+              {saving ? 'Saving...' : 'Save'}
             </button>
           </div>
         </div>
