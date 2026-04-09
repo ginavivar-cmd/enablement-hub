@@ -1,8 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import { Client } from "@notionhq/client";
 
-const notion = new Client({ auth: process.env.NOTION_TOKEN });
-
 function extractPageId(url: string): string | null {
   // Handles URLs like:
   //   https://www.notion.so/workspace/Page-Title-abc123def456...
@@ -29,6 +27,14 @@ function extractPageId(url: string): string | null {
 }
 
 export async function POST(req: NextRequest) {
+  const token = process.env.NOTION_TOKEN;
+  if (!token) {
+    return NextResponse.json(
+      { error: "Notion integration not configured. Add NOTION_TOKEN to .env.local (create one at notion.so/profile/integrations)." },
+      { status: 500 }
+    );
+  }
+
   const { url } = await req.json();
   if (!url) {
     return NextResponse.json({ error: "No URL provided" }, { status: 400 });
@@ -38,6 +44,8 @@ export async function POST(req: NextRequest) {
   if (!pageId) {
     return NextResponse.json({ error: "Could not extract Notion page ID from URL" }, { status: 400 });
   }
+
+  const notion = new Client({ auth: token });
 
   try {
     const page = await notion.pages.retrieve({ page_id: pageId });
@@ -99,8 +107,11 @@ export async function POST(req: NextRequest) {
   } catch (err: unknown) {
     const message = err instanceof Error ? err.message : "Unknown error";
     if (message.includes("Could not find page") || message.includes("object_not_found")) {
-      return NextResponse.json({ error: "Page not found. Check the URL and make sure the integration has access." }, { status: 404 });
+      return NextResponse.json({ error: "Page not found. Check the URL and make sure the integration has access to this page." }, { status: 404 });
     }
-    return NextResponse.json({ error: message }, { status: 500 });
+    if (message.includes("unauthorized") || message.includes("API token is invalid") || message.includes("Unauthorized")) {
+      return NextResponse.json({ error: "Invalid Notion token. Make sure NOTION_TOKEN is a valid Internal Integration Token (starts with ntn_ or secret_) and the integration has access to the database." }, { status: 401 });
+    }
+    return NextResponse.json({ error: "Could not connect to Notion. Check that NOTION_TOKEN is set in .env.local and the integration has access to the database." }, { status: 500 });
   }
 }
